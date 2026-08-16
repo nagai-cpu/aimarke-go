@@ -34,7 +34,11 @@
 </div>
 <script>
   var q = new URLSearchParams(location.search);
-  var src = q.get('s') || '(none)';
+  // 出所は ?src= で受ける。?s= は使わないこと——GA4の「サイト内検索」の既定
+  // クエリパラメータ(q,s,search,query,keyword)に含まれており、拡張計測が
+  // 勝手に view_search_results / search_term として拾ってしまう（2026-08-16に実測）。
+  // 旧リンク互換のため s= も読むが、新規リンクは必ず src= を使う。
+  var src = q.get('src') || q.get('s') || '(none)';
   var dest = 'https://line.me/R/ti/p/@441jbkws';
   // ?debug=1 のときは転送しない。計測タグが実際に発火しているかを
   // ブラウザで確認するための検証モード（LINEへ飛ぶと開発ツールで追えないため）。
@@ -50,11 +54,9 @@
   }
   var moved = false;
   function go_once(){ if (!moved) { moved = true; go(); } }
-  gtag('event', 'line_click', {
-    source: src,
-    event_callback: go_once,
-    transport_type: 'beacon'
-  });
+  var params = { source: src, event_callback: go_once };
+  if (!DEBUG) { params.transport_type = 'beacon'; }
+  gtag('event', 'line_click', params);
   setTimeout(go_once, 700);
 </script>
 <noscript>
