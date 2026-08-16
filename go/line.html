@@ -33,9 +33,21 @@
      切り替わらない場合は <a id="fallback" href="https://line.me/R/ti/p/@441jbkws">こちらをタップ</a></p>
 </div>
 <script>
-  var src = new URLSearchParams(location.search).get('s') || '(none)';
+  var q = new URLSearchParams(location.search);
+  var src = q.get('s') || '(none)';
   var dest = 'https://line.me/R/ti/p/@441jbkws';
-  function go() { location.replace(dest); }
+  // ?debug=1 のときは転送しない。計測タグが実際に発火しているかを
+  // ブラウザで確認するための検証モード（LINEへ飛ぶと開発ツールで追えないため）。
+  var DEBUG = q.has('debug');
+  function go() {
+    if (DEBUG) {
+      document.querySelector('.box').innerHTML =
+        '<p>検証モード：転送しません<br>source = <b>' + src + '</b><br>' +
+        'GA4のリアルタイム→イベントで line_click を確認してください</p>';
+      return;
+    }
+    location.replace(dest);
+  }
   var moved = false;
   function go_once(){ if (!moved) { moved = true; go(); } }
   gtag('event', 'line_click', {
